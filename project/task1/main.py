@@ -17,9 +17,7 @@ def get_graph_params(name):
     path = cfpq.download(name)
     graph = cfpq.graph_from_csv(path)
     return GraphData(
-        graph.number_of_nodes(),
-        graph.number_of_edges(),
-        graph.edges(data='label')
+        graph.number_of_nodes(), graph.number_of_edges(), graph.edges(data="label")
     )
 
 

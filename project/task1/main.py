@@ -24,5 +24,5 @@ def get_graph_params(name):
 
 
 def two_cycle_graph_dotfile(path, n, m, labels):
-    graph = cfpq.labeled_two_cycles_graph(n, n, labels)
+    graph = cfpq.labeled_two_cycles_graph(n, m, labels=labels)
     write_dot(graph, path)

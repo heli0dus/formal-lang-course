@@ -24,7 +24,7 @@ def test_get_graph_params():
 def test_two_cycle_graph_dotfile():
     with tempfile.NamedTemporaryFile() as tmp:
         path = tmp.name
-    n = 5
-    m = 7
-    task1.two_cycle_graph_dotfile(tmp.name, n, m)
+    n = 200
+    m = 201
+    task1.two_cycle_graph_dotfile(tmp.name, n, m, ["a", "b"])
     assert filecmp.cmp(f"{wd}/data/task1/twocycles.dot", path)

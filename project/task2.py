@@ -11,7 +11,7 @@ def regex_to_dfa(regex: str) -> DeterministicFiniteAutomaton:
 
 
 def graph_to_nfa(
-  graph: MultiDiGraph, start_states: Set[int], final_states: Set[int]
+    graph: MultiDiGraph, start_states: Set[int], final_states: Set[int]
 ) -> NondeterministicFiniteAutomaton:
     nfa = NondeterministicFiniteAutomaton()
 
@@ -27,7 +27,7 @@ def graph_to_nfa(
     for node in final_states:
         nfa.add_final_state(node)
 
-    for u, v, label in graph.edges(data='label'):
+    for u, v, label in graph.edges(data="label"):
         nfa.add_transition(u, label, v)
 
     return nfa

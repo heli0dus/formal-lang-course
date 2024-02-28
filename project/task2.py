@@ -4,8 +4,6 @@ from pyformlang.regular_expression import Regex
 
 from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
-from pyformlang.finite_automaton import State
-from pyformlang.finite_automaton import Symbol
 
 
 def regex_to_dfa(regex: str) -> DeterministicFiniteAutomaton:

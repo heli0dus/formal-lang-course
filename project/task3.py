@@ -1,5 +1,6 @@
 from typing import Iterable
 from networkx import MultiDiGraph
+
 # from networkx import NodeView
 from pyformlang.finite_automaton import Symbol
 
@@ -16,6 +17,7 @@ def as_set(obj):
     if not isinstance(obj, set):
         return {obj}
     return obj
+
 
 class FiniteAutomaton:
     def __init__(
@@ -110,7 +112,7 @@ def intersect_automata(
 
 def paths_ends(
     graph: MultiDiGraph, start_nodes: set[int], final_nodes: set[int], regex: str
-) -> list[tuple[any, any]]: #почему-то у меня не получилось импортировать NodeView
+) -> list[tuple[any, any]]:  # почему-то у меня не получилось импортировать NodeView
     query = task2.regex_to_dfa(regex)
     aut = task2.graph_to_nfa(graph, start_nodes, final_nodes)
 

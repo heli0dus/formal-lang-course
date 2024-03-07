@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Union
 from networkx import MultiDiGraph
 
 # from networkx import NodeView
@@ -21,7 +21,7 @@ def as_set(obj):
 
 class FiniteAutomaton:
     def __init__(
-        self, aut: NondeterministicFiniteAutomaton | DeterministicFiniteAutomaton
+        self, aut: Union[NondeterministicFiniteAutomaton, DeterministicFiniteAutomaton]
     ):
         self.start_states = aut.start_states
         self.final_states = aut.final_states

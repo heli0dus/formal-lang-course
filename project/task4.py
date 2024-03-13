@@ -4,8 +4,9 @@ import numpy as np
 from project.task3 import FiniteAutomaton
 
 
-def reachability_with_constraints(fa: FiniteAutomaton,
-                         constraints_fa: FiniteAutomaton) -> dict[int, set[int]]:
+def reachability_with_constraints(
+    fa: FiniteAutomaton, constraints_fa: FiniteAutomaton
+) -> dict[int, set[int]]:
     fa_mat, fa_idx = fa.matrix, fa.state_to_idx
     constraint_mat, constraint_idx = constraints_fa.matrix, constraints_fa.state_to_idx
     commons = set(fa_mat.keys()).intersection(set(constraint_mat.keys()))
@@ -22,7 +23,9 @@ def reachability_with_constraints(fa: FiniteAutomaton,
         n_constr = len(constraints_fa.state_to_idx)
         n_graph = len(fa.state_to_idx)
 
-        accessible = sparse.eye(n_constr, n_constr + n_graph, dtype=np.bool_, format="dok")
+        accessible = sparse.eye(
+            n_constr, n_constr + n_graph, dtype=np.bool_, format="dok"
+        )
         for rs in constraints_fa.start_states:
             i = constraint_idx[rs]
             accessible[i, n_constr + fa_idx[s]] = True
@@ -31,7 +34,9 @@ def reachability_with_constraints(fa: FiniteAutomaton,
         front = accessible
         while accessible.count_nonzero() != prev:
             prev = accessible.count_nonzero()
-            new_front = sparse.eye(n_constr, n_constr + n_graph, dtype=np.bool_, format="dok")
+            new_front = sparse.eye(
+                n_constr, n_constr + n_graph, dtype=np.bool_, format="dok"
+            )
             for mat in transitions.values():
                 next = front @ mat
                 for i in range(n_constr):
@@ -49,6 +54,9 @@ def reachability_with_constraints(fa: FiniteAutomaton,
                     result_single.add(idx_to_state[i])
         result[s] = result_single
 
-    return {k: v.intersection(set(fa.final_states)).
-            intersection(set(constraints_fa.final_states))
-            for k, v in result.items()}
+    return {
+        k: v.intersection(set(fa.final_states)).intersection(
+            set(constraints_fa.final_states)
+        )
+        for k, v in result.items()
+    }

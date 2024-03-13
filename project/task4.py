@@ -1,7 +1,7 @@
 import scipy.sparse as sparse
 import numpy as np
 
-from project.task3 import FiniteAutomaton
+from project.task3 import FiniteAutomaton, intersect_automata
 
 
 def reachability_with_constraints(
@@ -54,9 +54,11 @@ def reachability_with_constraints(
                     result_single.add(idx_to_state[i])
         result[s] = result_single
 
-    return {
-        k: v.intersection(set(fa.final_states)).intersection(
-            set(constraints_fa.final_states)
-        )
-        for k, v in result.items()
-    }
+    # both = intersect_automata(fa, constraints_fa)
+    # those_are_good = set(fa.final_states).intersection(
+    #         set(constraints_fa.final_states)).union(set(fa.start_states).intersection(constraints_fa.start_states))
+    # those_are_good_v2 = set(both.start_states).union(both.final_states)
+    those_are_good_v3 = set(fa.final_states).intersection(
+        set(constraints_fa.final_states)
+    )  # .union(set(fa.start_states))
+    return {k: v.intersection(those_are_good_v3) for k, v in result.items()}

@@ -117,7 +117,9 @@ def paths_ends(
     query = task2.regex_to_dfa(regex)
     aut = task2.graph_to_nfa(graph, start_nodes, final_nodes)
 
-    both = FiniteAutomaton(intersect_automata(FiniteAutomaton(query), FiniteAutomaton(aut)))
+    both = FiniteAutomaton(
+        intersect_automata(FiniteAutomaton(query), FiniteAutomaton(aut))
+    )
     flat = None
     for mat in both.matrix.values():
         if flat is None:

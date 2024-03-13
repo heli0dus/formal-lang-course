@@ -9,6 +9,7 @@ from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
 from pyformlang.finite_automaton import State
 from pyformlang.finite_automaton import EpsilonNFA
 import scipy.sparse as sparse
+import numpy as np
 
 import project.task2 as task2
 

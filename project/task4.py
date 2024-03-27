@@ -11,7 +11,7 @@ def reachability_with_constraints(
     constraint_mat, constraint_idx = constraints_fa.matrix, constraints_fa.state_to_idx
     commons = set(fa_mat.keys()).intersection(set(constraint_mat.keys()))
     transitions = {
-        s: sparse.block_diag((fa_mat[s], constraint_mat[s]), format="dok")
+        s: sparse.block_diag((constraint_mat[s], fa_mat[s]), format="dok")
         for s in commons
     }
 
@@ -28,7 +28,7 @@ def reachability_with_constraints(
         )
         for rs in constraints_fa.start_states:
             i = constraint_idx[rs]
-            accessible[i, n_constr + fa_idx[s]] = True
+            accessible[i, n_constr + s] = True
 
         prev = 0
         front = accessible
@@ -57,8 +57,8 @@ def reachability_with_constraints(
     # both = intersect_automata(fa, constraints_fa)
     # those_are_good = set(fa.final_states).intersection(
     #         set(constraints_fa.final_states)).union(set(fa.start_states).intersection(constraints_fa.start_states))
-    # those_are_good_v2 = set(both.start_states).union(both.final_states)
+    those_are_good_v2 = set(constraints_fa.final_states)
     those_are_good_v3 = set(fa.final_states).intersection(
         set(constraints_fa.final_states)
     )  # .union(set(fa.start_states))
-    return {k: v.intersection(those_are_good_v3) for k, v in result.items()}
+    return {k: v.intersection(those_are_good_v2) for k, v in result.items()}

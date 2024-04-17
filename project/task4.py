@@ -1,64 +1,48 @@
 import scipy.sparse as sparse
 import numpy as np
+from copy import deepcopy
+from pyformlang.finite_automaton import State
 
 from project.task3 import FiniteAutomaton, intersect_automata
 
+def fixed_matrix(m):
+    result = sparse.dok_matrix(m.shape, dtype=bool)
+    for i in range(m.shape[0]):
+        for j in range(m.shape[0]):
+            if m[j, i]:
+                result[i] += m[j]
+    return result
 
 def reachability_with_constraints(
     fa: FiniteAutomaton, constraints_fa: FiniteAutomaton
 ) -> dict[int, set[int]]:
-    fa_mat, fa_idx = fa.matrix, fa.state_to_idx
-    constraint_mat, constraint_idx = constraints_fa.matrix, constraints_fa.state_to_idx
-    commons = set(fa_mat.keys()).intersection(set(constraint_mat.keys()))
+
+    m = constraints_fa.size()
+    n = fa.size()
+
+    constr_start_inds = [constraints_fa.state_to_idx[State(i)] for i in constraints_fa.start_states]
+
+    symbols = fa.matrix.keys() & constraints_fa.matrix.keys()
+    result = {s: set() for s in fa.start_states}
     transitions = {
-        s: sparse.block_diag((constraint_mat[s], fa_mat[s]), format="dok")
-        for s in commons
+        label: sparse.block_diag((constraints_fa.matrix[label], fa.matrix[label])) for label in symbols
     }
 
-    idx_to_state = {v: k for k, v in fa_idx.items()}
-    starts_idx = [fa_idx[s] for s in fa.start_states]
+    for v in [fa.state_to_idx[State(k)] for k in fa.start_states]:
+        front = sparse.dok_matrix((m, m + n), dtype=bool)
+        for i in constr_start_inds:
+            front[i, i] = True
+        for i in range(m):
+            front[i, v + m] = True
 
-    result = dict()
-    for s in starts_idx:
-        n_constr = len(constraints_fa.state_to_idx)
-        n_graph = len(fa.state_to_idx)
-
-        accessible = sparse.eye(
-            n_constr, n_constr + n_graph, dtype=np.bool_, format="dok"
-        )
-        for rs in constraints_fa.start_states:
-            i = constraint_idx[rs]
-            accessible[i, n_constr + s] = True
-
-        prev = 0
-        front = accessible
-        while accessible.count_nonzero() != prev:
-            prev = accessible.count_nonzero()
-            new_front = sparse.eye(
-                n_constr, n_constr + n_graph, dtype=np.bool_, format="dok"
-            )
-            for mat in transitions.values():
-                next = front @ mat
-                for i in range(n_constr):
-                    for j in range(n_constr):
-                        if next[i, j]:
-                            new_front[j, n_constr:] += next[i, n_constr:]
-            accessible += new_front
+        for _ in range(m * n):
+            new_front = sparse.dok_matrix((m, m + n), dtype=bool)
+            for sym in symbols:
+                new_front += fixed_matrix(front @ transitions[sym])
             front = new_front
 
-        result_single = set()
-        for fs in constraints_fa.final_states:
-            fs_id = constraint_idx[fs]
-            for i in range(n_graph):
-                if accessible[fs_id, n_constr + i]:
-                    result_single.add(idx_to_state[i])
-        result[s] = result_single
-
-    # both = intersect_automata(fa, constraints_fa)
-    # those_are_good = set(fa.final_states).intersection(
-    #         set(constraints_fa.final_states)).union(set(fa.start_states).intersection(constraints_fa.start_states))
-    those_are_good_v2 = set(constraints_fa.final_states)
-    those_are_good_v3 = set(fa.final_states).intersection(
-        set(constraints_fa.final_states)
-    )  # .union(set(fa.start_states))
-    return {k: v.intersection(those_are_good_v2) for k, v in result.items()}
+            for i in [constraints_fa.state_to_idx[State(k)] for k in constraints_fa.final_states]:
+                for j in [fa.state_to_idx[State(k)] for k in fa.final_states]:
+                    if front[i, j + m]:
+                        result[v].add(j)
+    return result

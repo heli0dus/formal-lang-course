@@ -1,5 +1,6 @@
 from typing import Iterable, Union
 from networkx import MultiDiGraph
+from copy import deepcopy
 
 # from networkx import NodeView
 from pyformlang.finite_automaton import Symbol
@@ -47,6 +48,9 @@ class FiniteAutomaton:
     def is_empty(self) -> bool:
         return len(self.matrix) == 0 or len(list(self.matrix.values())[0]) == 0
 
+    def size(self) -> int:
+        return len(self.state_to_idx)
+
     def transitive_closure(self):
         if len(self.matrix.values()) == 0:
             return sparse.dok_matrix((0, 0), dtype=bool)
@@ -57,6 +61,8 @@ class FiniteAutomaton:
 
     def to_automaton(self) -> NondeterministicFiniteAutomaton:
         ans = NondeterministicFiniteAutomaton()
+
+        idx_to_state = {v: k for k, v in self.state_to_idx.items()}
 
         for label in self.matrix.keys():
             matrix_size = self.matrix[label].shape[0]
@@ -69,7 +75,7 @@ class FiniteAutomaton:
                             self.state_to_idx[State(y)],
                         )
 
-        for s in self.start_staes:
+        for s in self.start_states:
             ans.add_start_state(self.state_to_idx[State(s)])
 
         for s in self.final_states:
@@ -81,69 +87,51 @@ class FiniteAutomaton:
 def intersect_automata(
     automaton1: FiniteAutomaton, automaton2: FiniteAutomaton
 ) -> FiniteAutomaton:
+    a = deepcopy(automaton1)
     num_states = len(automaton2.state_to_idx)
     symbols = set(automaton1.matrix.keys()).intersection(automaton2.matrix.keys())
     matrices = {
-        label: sparse.kron(automaton1.matrix[label], automaton2.matrix[label])
+        label: sparse.kron(automaton1.matrix[label], automaton2.matrix[label], "csr")
         for label in symbols
     }
+    start = set()
+    final = set()
+    mapping = dict()
 
-    res = EpsilonNFA()
-    pass
+    for u, i in automaton1.state_to_idx.items():
+        for v, j in automaton2.state_to_idx.items():
 
-    for symb, mat in matrices.items():
-        from_idx, to_idx = mat.nonzero()
-        for fro, to in zip(from_idx, to_idx):
-            res.add_transition(fro, symb, to)
+            k = len(automaton2.state_to_idx) * i + j
+            mapping[State(k)] = k
 
-    for s1 in automaton1.start_states:
-        for s2 in automaton2.start_states:
-            res.add_start_state(
-                automaton1.state_to_idx[s1] * num_states + automaton2.state_to_idx[s2]
-            )
+            assert isinstance(u, State)
+            if u in automaton1.start_states and v in automaton2.start_states:
+                start.add(State(k))
 
-    for s1 in automaton1.final_states:
-        for s2 in automaton2.final_states:
-            res.add_final_state(
-                automaton1.state_to_idx[s1] * num_states + automaton2.state_to_idx[s2]
-            )
+            if u in automaton1.final_states and v in automaton2.final_states:
+                final.add(State(k))
 
-    return res
+    a.matrix = matrices
+    a.state_to_idx = mapping
+    a.start_states = start
+    a.final_states = final
+    return a
 
 
 def paths_ends(
     graph: MultiDiGraph, start_nodes: set[int], final_nodes: set[int], regex: str
 ) -> list[tuple[any, any]]:  # почему-то у меня не получилось импортировать NodeView
-    query = task2.regex_to_dfa(regex)
-    aut = task2.graph_to_nfa(graph, start_nodes, final_nodes)
+    query = FiniteAutomaton(task2.regex_to_dfa(regex))
+    aut_graph = FiniteAutomaton(task2.graph_to_nfa(graph, start_nodes, final_nodes))
+    intersection = intersect_automata(aut_graph, query)
+    closure = intersection.transitive_closure()
 
-    both = FiniteAutomaton(
-        intersect_automata(FiniteAutomaton(query), FiniteAutomaton(aut))
-    )
-    flat = None
-    for mat in both.matrix.values():
-        if flat is None:
-            flat = mat
-            continue
-        flat |= mat
-    if flat is None:
-        return []
+    size = query.size()
+    result = []
+    for u, v in zip(*closure.nonzero()):
+        if u in intersection.start_states and v in intersection.final_states:
+            result.append(
+                (aut_graph.state_to_idx[u // size], aut_graph.state_to_idx[v // size])
+            )
 
-    prev = 0
-    while flat.count_nonzero() != prev:
-        prev = flat.count_nonzero()
-        flat += flat @ flat
-
-    rev_idx = {i: k for k, i in both.state_to_idx.items()}
-    names = list(aut.states)
-    n_states = len(names)
-    result = set()
-
-    from_idx, to_idx = flat.nonzero()
-    for fro, to in zip(from_idx, to_idx):
-        fro_id = rev_idx[fro]
-        to_id = rev_idx[to]
-        if fro_id in both.start_states and to_id in both.final_states:
-            result.add((names[fro_id.value % n_states], names[to_id.value % n_states]))
-
-    return list(result)
+    return result

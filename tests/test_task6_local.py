@@ -16,13 +16,16 @@ def test_cfpq():
     start_nodes = {0, 1, 2}
     final_nodes = {0, 1}
 
-    print(gramm)
-    print(task6.cfg_to_weak_normal_form(gramm))
+    print()
+
+    print(gramm.to_text())
+    print(task6.cfg_to_weak_normal_form(gramm).to_text())
     print()
     print(task4.reachability_with_constraints(
                 task3.FiniteAutomaton(task2.graph_to_nfa(gr, start_nodes, final_nodes)),
                 task3.FiniteAutomaton(task2.regex_to_dfa(regex_str)),
             ))
     print(task6.cfpq_with_hellings(gramm, gr, start_nodes, final_nodes))
+    print(task3.paths_ends(gr, start_nodes, final_nodes, regex_str))
 
     assert True

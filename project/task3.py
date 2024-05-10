@@ -29,7 +29,7 @@ class FiniteAutomaton:
         self.final_states = aut.final_states
         states = aut.to_dict()
         len_states = len(aut.states)
-        self.state_to_idx = {v: i for i, v in enumerate(aut.states)}
+        self.state_mat_mapping = {v: i for i, v in enumerate(aut.states)}
         self.matrix = dict()
 
         for label in aut.symbols:
@@ -38,31 +38,33 @@ class FiniteAutomaton:
                 if label in edges:
                     for v in as_set(edges[label]):
                         self.matrix[label][
-                            self.state_to_idx[u], self.state_to_idx[v]
+                            self.state_mat_mapping[u], self.state_mat_mapping[v]
                         ] = True
 
     def accepts(self, word: Iterable[Symbol]) -> bool:
         return self.to_automaton().accepts("".join(word))
-        pass
 
     def is_empty(self) -> bool:
-        return len(self.matrix) == 0 or len(list(self.matrix.values())[0]) == 0
+        return len(self.matrix.values()) == 0
 
     def size(self) -> int:
-        return len(self.state_to_idx)
+        return len(self.state_mat_mapping)
 
-    def transitive_closure(self):
-        if len(self.matrix.values()) == 0:
+    def transitive_closure(self) -> sparse.dok_matrix:
+        if self.is_empty():
             return sparse.dok_matrix((0, 0), dtype=bool)
-        adj = sum(self.matrix.values())
+        
+        adj = sum(self.matrix.values()) + sparse.eye(self.size(), self.size(), dtype=bool)
+
         for _ in range(adj.shape[0]):
             adj += adj @ adj
+            
         return adj
 
     def to_automaton(self) -> NondeterministicFiniteAutomaton:
         ans = NondeterministicFiniteAutomaton()
 
-        idx_to_state = {v: k for k, v in self.state_to_idx.items()}
+        idx_to_state = {v: k for k, v in self.state_mat_mapping.items()}
 
         for label in self.matrix.keys():
             matrix_size = self.matrix[label].shape[0]
@@ -70,16 +72,16 @@ class FiniteAutomaton:
                 for y in range(matrix_size):
                     if self.matrix[label][x, y]:
                         ans.add_transition(
-                            self.state_to_idx[State(x)],
+                            self.state_mat_mapping[State(x)],
                             label,
-                            self.state_to_idx[State(y)],
+                            self.state_mat_mapping[State(y)],
                         )
 
         for s in self.start_states:
-            ans.add_start_state(self.state_to_idx[State(s)])
+            ans.add_start_state(self.state_mat_mapping[State(s)])
 
         for s in self.final_states:
-            ans.add_final_state(self.state_to_idx[State(s)])
+            ans.add_final_state(self.state_mat_mapping[State(s)])
 
         return ans
 
@@ -88,8 +90,13 @@ def intersect_automata(
     automaton1: FiniteAutomaton, automaton2: FiniteAutomaton
 ) -> FiniteAutomaton:
     a = deepcopy(automaton1)
-    num_states = len(automaton2.state_to_idx)
-    symbols = set(automaton1.matrix.keys()).intersection(automaton2.matrix.keys())
+    num_states = len(automaton2.state_mat_mapping)
+    symbols = automaton1.matrix.keys() & automaton2.matrix.keys()
+    # symbols = None
+    # if take_from_mapping:
+    #     symbols = automaton1.state_mat_mapping.keys() & automaton2.state_mat_mapping.keys()
+    # else:
+    #     symbols = automaton1.matrix.keys() & automaton2.matrix.keys()
     matrices = {
         label: sparse.kron(automaton1.matrix[label], automaton2.matrix[label], "csr")
         for label in symbols
@@ -98,10 +105,10 @@ def intersect_automata(
     final = set()
     mapping = dict()
 
-    for u, i in automaton1.state_to_idx.items():
-        for v, j in automaton2.state_to_idx.items():
+    for u, i in automaton1.state_mat_mapping.items():
+        for v, j in automaton2.state_mat_mapping.items():
 
-            k = len(automaton2.state_to_idx) * i + j
+            k = len(automaton2.state_mat_mapping) * i + j
             mapping[State(k)] = k
 
             assert isinstance(u, State)
@@ -112,7 +119,7 @@ def intersect_automata(
                 final.add(State(k))
 
     a.matrix = matrices
-    a.state_to_idx = mapping
+    a.state_mat_mapping = mapping
     a.start_states = start
     a.final_states = final
     return a
@@ -131,7 +138,7 @@ def paths_ends(
     for u, v in zip(*closure.nonzero()):
         if u in intersection.start_states and v in intersection.final_states:
             result.append(
-                (aut_graph.state_to_idx[u // size], aut_graph.state_to_idx[v // size])
+                (aut_graph.state_mat_mapping[u // size], aut_graph.state_mat_mapping[v // size])
             )
 
     return result

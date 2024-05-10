@@ -2,6 +2,7 @@ from pyformlang.cfg import CFG, Variable, Terminal, Epsilon
 import pyformlang
 import networkx as nx
 from typing import Tuple
+from copy import deepcopy
 
 
 def cfg_to_weak_normal_form(cfg: pyformlang.cfg.CFG) -> pyformlang.cfg.CFG:
@@ -34,25 +35,29 @@ def cfpq_with_hellings(
     p3 = {}
 
     for p in gramm.productions:
-        p_len = p.body
+        p_len = len(p.body)
         if p_len == 1 and isinstance(p.body[0], Terminal):
             p1.setdefault(p.head, set()).add(p.body[0])
-        elif p_len == 1 and isinstance(p.body[0], Epsilon):
-            p2.add(p.body[0])
+        elif p_len == 0 or p_len == 1 and isinstance(p.body[0], Epsilon):
+            p2.add(p.head)
         elif p_len == 2:
-            p3.setdefault(p.head, set).add((p.body[0], p.body[1]))
-
+            p3.setdefault(p.head, set()).add((p.body[0], p.body[1]))
+    #петли
     result = {(n, v, v) for n in p2 for v in graph.nodes}
-    increment = {}
-    i = 0
-    for v, u, tag in graph.edges.data("label"):
-        for n in p1:
-            if tag in p1[n]:
-                increment[i] = (n, v, u)
-                i += 1
-    result.union(increment)
+    #переходы по терминалам
+    increment = {(n, v, u) 
+                 for (v, u, tag) in graph.edges.data("label")
+                 for n in p1
+                 if Terminal(tag) in p1[n]}
+    # i = 0
+    # for v, u, tag in graph.edges.data("label"):
+    #     for n in p1:
+    #         if tag in p1[n]:
+    #             increment[i] = (n, v, u)
+    #             i += 1
+    result |= increment
 
-    queue_to_process = result.copy()
+    queue_to_process = deepcopy(result)
 
     while len(queue_to_process) > 0:
         n_i, vi, ui = queue_to_process.pop()
@@ -60,23 +65,23 @@ def cfpq_with_hellings(
         step_increment = set()
 
         for n_j, vj, uj in result:
-            if vi == ui:
+            if vi == uj:
                 for n_k in p3:
-                    if (n_j, n_i) in p3[n_k] and (n_k, vj, vi) not in result:
+                    if (n_j, n_i) in p3[n_k] and (n_k, vj, ui) not in result:
                         queue_to_process.add((n_k, vj, ui))
                         step_increment.add((n_k, vj, ui))
 
         for n_j, vj, uj in result:
-            if ui == vi:
+            if ui == vj:
                 for n_k in p3:
-                    if (n_i, n_j) in p3[n_k] and (n_k, vi, ui) not in result:
+                    if (n_i, n_j) in p3[n_k] and (n_k, vi, uj) not in result:
                         queue_to_process.add((n_k, vi, uj))
                         step_increment.add((n_k, vi, uj))
 
-        result.union(step_increment)
+        result |= step_increment
 
     return {
-        (u, v)
-        for (n_i, u, v) in result
-        if u in start_nodes and v in final_nodes and Variable(n_i) == cfg.start_symbol
+        (v, u)
+        for (n_i, v, u) in result
+        if v in start_nodes and u in final_nodes and Variable(n_i) == cfg.start_symbol
     }

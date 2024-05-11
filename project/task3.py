@@ -53,12 +53,14 @@ class FiniteAutomaton:
     def transitive_closure(self) -> sparse.dok_matrix:
         if self.is_empty():
             return sparse.dok_matrix((0, 0), dtype=bool)
-        
-        adj = sum(self.matrix.values()) + sparse.eye(self.size(), self.size(), dtype=bool)
+
+        adj = sum(self.matrix.values()) + sparse.eye(
+            self.size(), self.size(), dtype=bool
+        )
 
         for _ in range(adj.shape[0]):
             adj += adj @ adj
-            
+
         return adj
 
     def to_automaton(self) -> NondeterministicFiniteAutomaton:
@@ -134,11 +136,17 @@ def paths_ends(
     closure = intersection.transitive_closure()
 
     size = query.size()
-    result = []
+    result = set()
     for u, v in zip(*closure.nonzero()):
         if u in intersection.start_states and v in intersection.final_states:
-            result.append(
-                (aut_graph.state_mat_mapping[u // size], aut_graph.state_mat_mapping[v // size])
+            result.add(
+                (
+                    aut_graph.state_mat_mapping[u // size],
+                    aut_graph.state_mat_mapping[v // size],
+                )
             )
 
-    return result
+    if len(query.start_states & query.final_states) > 0:
+        result |= {(i, i) for i in start_nodes & final_nodes}
+
+    return list(result)

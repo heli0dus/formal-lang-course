@@ -39,13 +39,16 @@ def reachability_with_constraints(
             front[i, i] = True
         for i in range(m):
             front[i, v + m] = True
-        
+
         for i in [
             constraints_fa.state_mat_mapping[State(k)]
             for k in (constraints_fa.final_states & constraints_fa.start_states)
         ]:
-            for j in [fa.state_mat_mapping[State(k)] for k in (fa.final_states & fa.start_states)]:
-                if front[i, j + m]:
+            for j in [
+                fa.state_mat_mapping[State(k)]
+                for k in (fa.final_states & fa.start_states)
+            ]:
+                if front[i, i] and front[i, j + m]:
                     result[v].add(j)
 
         for _ in range(m * n):

@@ -42,13 +42,15 @@ def cfpq_with_hellings(
             p2.add(p.head)
         elif p_len == 2:
             p3.setdefault(p.head, set()).add((p.body[0], p.body[1]))
-    #петли
+    # петли
     result = {(n, v, v) for n in p2 for v in graph.nodes}
-    #переходы по терминалам
-    increment = {(n, v, u) 
-                 for (v, u, tag) in graph.edges.data("label")
-                 for n in p1
-                 if Terminal(tag) in p1[n]}
+    # переходы по терминалам
+    increment = {
+        (n, v, u)
+        for (v, u, tag) in graph.edges.data("label")
+        for n in p1
+        if Terminal(tag) in p1[n]
+    }
     # i = 0
     # for v, u, tag in graph.edges.data("label"):
     #     for n in p1:

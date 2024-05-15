@@ -24,6 +24,7 @@ def cfpq_with_matrix(
     mat_init = {}
     terminals_to_vars = {}
     eps_rules = set()
+    pair_rules = {}
 
     for p in gramm.productions:
         mat_init[p.head.to_text()] = sparse.dok_matrix((n, n), dtype=bool)
@@ -31,6 +32,10 @@ def cfpq_with_matrix(
             terminals_to_vars.setdefault(p.body[0].to_text(), set()).add(p.head.to_text())
         if len(p.body) == 0:
             eps_rules.add(p.head.to_text())
+        if len(p.body) == 2:
+            pair_rules.setdefault(p.head.to_text(), set()).add(
+                (p.body[0].to_text(), p.body[1].to_text())
+            )
 
     for u, v, label in graph.edges(data="label"):
         if label in terminals_to_vars:
@@ -43,14 +48,7 @@ def cfpq_with_matrix(
     mat = {
         p.head.to_text(): sparse.dok_matrix((n, n), dtype=bool)
         for p in gramm.productions
-    }
-
-    pair_rules = {}
-    for p in gramm.productions:
-        if len(p.body) == 2:
-            pair_rules.setdefault(p.head.to_text(), set()).add(
-                (p.body[0].to_text(), p.body[1].to_text())
-            )
+    } 
 
     for _ in range(graph.number_of_nodes() ** 2):
         for sym, prod in pair_rules.items():

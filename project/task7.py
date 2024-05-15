@@ -6,13 +6,14 @@ from project.task6 import cfg_to_weak_normal_form
 import scipy.sparse as sparse
 import copy
 
+
 def cfpq_with_matrix(
     cfg: CFG,
     graph: nx.DiGraph,
     start_nodes: Set[int] = None,
     final_nodes: Set[int] = None,
 ) -> set[tuple[int, int]]:
-    
+
     if start_nodes is None:
         start_nodes = graph.nodes
     if final_nodes is None:
@@ -29,7 +30,9 @@ def cfpq_with_matrix(
     for p in gramm.productions:
         mat_init[p.head.to_text()] = sparse.dok_matrix((n, n), dtype=bool)
         if len(p.body) == 1 and isinstance(p.body[0], Terminal):
-            terminals_to_vars.setdefault(p.body[0].to_text(), set()).add(p.head.to_text())
+            terminals_to_vars.setdefault(p.body[0].to_text(), set()).add(
+                p.head.to_text()
+            )
         if len(p.body) == 0:
             eps_rules.add(p.head.to_text())
         if len(p.body) == 2:
@@ -48,7 +51,7 @@ def cfpq_with_matrix(
     mat = {
         p.head.to_text(): sparse.dok_matrix((n, n), dtype=bool)
         for p in gramm.productions
-    } 
+    }
 
     for _ in range(graph.number_of_nodes() ** 2):
         for sym, prod in pair_rules.items():

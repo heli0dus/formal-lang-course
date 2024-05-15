@@ -29,12 +29,12 @@ def cfpq_with_matrix(
 
     for p in gramm.productions:
         mat_init[p.head.to_text()] = sparse.dok_matrix((n, n), dtype=bool)
+        if len(p.body) == 0:
+            eps_rules.add(p.head.to_text())
         if len(p.body) == 1 and isinstance(p.body[0], Terminal):
             terminals_to_vars.setdefault(p.body[0].to_text(), set()).add(
                 p.head.to_text()
             )
-        if len(p.body) == 0:
-            eps_rules.add(p.head.to_text())
         if len(p.body) == 2:
             pair_rules.setdefault(p.head.to_text(), set()).add(
                 (p.body[0].to_text(), p.body[1].to_text())

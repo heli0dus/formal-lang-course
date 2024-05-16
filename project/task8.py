@@ -7,6 +7,7 @@ from itertools import product
 
 from project.task2 import graph_to_nfa
 
+
 def cfpq_with_tensor(
     rsm: rsa.RecursiveAutomaton,
     graph: nx.DiGraph,
@@ -19,7 +20,9 @@ def cfpq_with_tensor(
     if final_nodes is None:
         final_nodes = graph.nodes
 
-    graph_mat, graph_mat_mapping, n_graph, graph_states = graph_to_mat(graph, start_nodes, final_nodes)
+    graph_mat, graph_mat_mapping, n_graph, graph_states = graph_to_mat(
+        graph, start_nodes, final_nodes
+    )
 
     rsm_mat, n_rsm = rsm_to_mat(rsm)
     rsm_states = set()
@@ -65,9 +68,9 @@ def cfpq_with_tensor(
                 sym = from_rsm_state[0]
                 from_graph_idx = graph_mat_mapping[from_state[0]]
                 to_graph_idx = graph_mat_mapping[to_state[0]]
-                graph_mat.setdefault(
-                    sym, dok_matrix((n_graph, n_graph), dtype=bool)
-                )[from_graph_idx, to_graph_idx] = True
+                graph_mat.setdefault(sym, dok_matrix((n_graph, n_graph), dtype=bool))[
+                    from_graph_idx, to_graph_idx
+                ] = True
 
     S = rsm.initial_label.value
     if S not in graph_mat:
@@ -105,15 +108,16 @@ def rsm_to_mat(rsm: rsa.RecursiveAutomaton) -> Tuple[Dict[str, dok_matrix], int]
             for symbol, to_state in transitions.items():
                 from_idx = mapping[(sym.value, from_state.value)]
                 to_idx = mapping[(sym.value, to_state.value)]
-                mat.setdefault(
-                    symbol.value, dok_matrix((n, n), dtype=bool)
-                )[from_idx, to_idx] = True
+                mat.setdefault(symbol.value, dok_matrix((n, n), dtype=bool))[
+                    from_idx, to_idx
+                ] = True
 
     return (mat, n)
 
-def graph_to_mat(graph: nx.DiGraph,
-                 start_nodes: set[int],
-                 final_nodes: set[int]) -> Tuple[Dict[str, dok_matrix], Dict[str, int], int, Set[int]]:
+
+def graph_to_mat(
+    graph: nx.DiGraph, start_nodes: set[int], final_nodes: set[int]
+) -> Tuple[Dict[str, dok_matrix], Dict[str, int], int, Set[int]]:
     nfa = graph_to_nfa(graph, start_nodes, final_nodes)
 
     states = {state.value for state in nfa.states}

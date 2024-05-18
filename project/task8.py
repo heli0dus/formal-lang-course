@@ -15,6 +15,9 @@ def cfpq_with_tensor(
     final_nodes: set[int] = None,
 ) -> set[tuple[int, int]]:
 
+    if isinstance(rsm, cfg.CFG):
+        rsm = cfg_to_rsm(rsm)
+
     if start_nodes is None:
         start_nodes = graph.nodes
     if final_nodes is None:

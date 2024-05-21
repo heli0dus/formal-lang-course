@@ -53,7 +53,7 @@ def cfpq_with_matrix(
         for p in gramm.productions
     }
 
-    for _ in range(graph.number_of_nodes() ** 2):
+    for i in range(graph.number_of_nodes() * len(mat_init)):
         for sym, prod in pair_rules.items():
             for lhs, rhs in prod:
                 mat[sym] += mat_init[lhs] @ mat_init[rhs]

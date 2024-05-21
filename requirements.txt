@@ -6,4 +6,5 @@ networkx==3.2.1
 pre-commit
 pydot
 pytest
+pytest-xdist
 scipy

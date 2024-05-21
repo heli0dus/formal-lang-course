@@ -1,4 +1,4 @@
-from typing import Iterable, Union
+from typing import Iterable, Union, Dict
 from networkx import MultiDiGraph
 from copy import deepcopy
 
@@ -30,7 +30,7 @@ class FiniteAutomaton:
         states = aut.to_dict()
         len_states = len(aut.states)
         self.state_mat_mapping = {v: i for i, v in enumerate(aut.states)}
-        self.matrix = dict()
+        self.matrix: Dict[Symbol, sparse.dok_matrix] = dict()
 
         for label in aut.symbols:
             self.matrix[label] = sparse.dok_matrix((len_states, len_states), dtype=bool)
@@ -45,7 +45,8 @@ class FiniteAutomaton:
         return self.to_automaton().accepts("".join(word))
 
     def is_empty(self) -> bool:
-        return len(self.matrix.values()) == 0
+        return self.to_automaton().is_empty()
+        # return len([sym for sym in self.matrix.values() if sym.count_nonzero() > 0]) == 0
 
     def size(self) -> int:
         return len(self.state_mat_mapping)

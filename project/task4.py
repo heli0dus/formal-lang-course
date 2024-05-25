@@ -33,7 +33,8 @@ def reachability_with_constraints(
         for label in symbols
     }
 
-    for v in [fa.state_mat_mapping[State(k)] for k in fa.start_states]:
+    for k in fa.start_states:
+        v = fa.state_mat_mapping[State(k)]
         front = sparse.dok_matrix((m, m + n), dtype=bool)
         for i in constr_start_inds:
             front[i, i] = True
@@ -49,7 +50,7 @@ def reachability_with_constraints(
                 for k in (fa.final_states & fa.start_states)
             ]:
                 if front[i, i] and front[i, j + m]:
-                    result[v].add(j)
+                    result[k].add(j)
 
         for _ in range(m * n):
             new_front = sparse.dok_matrix((m, m + n), dtype=bool)

@@ -6,12 +6,13 @@ from project.gflpql.project.gflpqlListener import gflpqlListener
 from antlr4 import *
 from antlr4.InputStream import InputStream
 
+
 class NodeCountListener(gflpqlListener):
 
     def __init__(self) -> None:
         super(gflpqlListener, self).__init__()
         self.count = 0
-        
+
     def enterEveryRule(self, ctx):
         self.count += 1
 
@@ -31,6 +32,7 @@ def prog_to_tree(program: str) -> tuple[ParserRuleContext, bool]:
     prog = parser.prog()
     correct = parser.getNumberOfSyntaxErrors() == 0
     return (prog, correct)
+
 
 def nodes_count(tree: ParserRuleContext) -> int:
     listener = NodeCountListener()

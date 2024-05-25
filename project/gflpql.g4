@@ -16,13 +16,13 @@ expr: NUM | CHAR | VAR | edge_expr | set_expr | regexp | select;
 
 set_expr: '[' expr (',' expr)* ']';
 edge_expr: '(' expr ',' expr ',' expr ')';
-regexp: 
-        CHAR 
-        | VAR 
-        | '(' regexp ')' 
-        | regexp '|' regexp 
+regexp:
+        CHAR
+        | VAR
+        | '(' regexp ')'
+        | regexp '|' regexp
         | regexp '^' range
-        | regexp '.' regexp 
+        | regexp '.' regexp
         | regexp '&' regexp;
 range: '[' NUM '..' NUM? ']';
 select: v_filter? v_filter? 'return' VAR (',' VAR)? 'where' VAR 'reachable'

@@ -11,15 +11,9 @@ on:
 jobs:
 
   # This workflow contains a single job called "style"
-  style:
-
-    # The type of runner that the job will run on
+  tests:
     runs-on: ubuntu-latest
-
-    # A strategy creates a build matrix for your jobs
     strategy:
-
-      # You can define a matrix of different job configurations
       matrix:
 
         # Each option you define in the matrix has a key and value
@@ -45,6 +39,9 @@ jobs:
           python -m pip install --upgrade pip wheel setuptools
           python -m pip install -r requirements.txt
           python -m pip list
+
+      - name: Generate ANTLR
+        run: antlr4 -Dlanguage=Python3 project/gflpql.g4 -visitor -o project/gflpql
 
       # Running all the tests in "tests" directory
       - name: Run all tests
